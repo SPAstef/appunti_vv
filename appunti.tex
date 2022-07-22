@@ -1,0 +1,437 @@
+\documentclass{article}
+
+\usepackage{algorithm}
+
+\usepackage[noend]{algpseudocode}
+\renewcommand\algorithmicthen{}
+\renewcommand\algorithmicdo{}
+% New definitions
+\algnewcommand\algorithmicswitch{\textbf{switch}}
+\algnewcommand\algorithmiccase{\textbf{case}}
+\algnewcommand\algorithmicassert{\texttt{assert}}
+\algnewcommand\Assert[1]{\State \algorithmicassert(#1)}%
+% New "environments"
+\algdef{SE}[SWITCH]{Switch}{EndSwitch}[1]{\algorithmicswitch\ #1\ \algorithmicdo}{\algorithmicend\
+\algorithmicswitch}%
+\algdef{SE}[CASE]{Case}{EndCase}[1]{\algorithmiccase\ #1}{\algorithmicend\
+\algorithmiccase}%
+\algtext*{EndSwitch}%
+\algtext*{EndCase}%
+
+\usepackage{amsfonts}
+
+\usepackage{amsmath}
+
+\usepackage{amssymb}
+
+\usepackage{amsfonts}
+
+\usepackage{amsthm}
+\theoremstyle{example}
+\newtheorem{example}{Example}
+
+\theoremstyle{remark}
+\newtheorem{remark}{Remark}
+
+\usepackage{bm}
+
+\usepackage{booktabs}
+
+\usepackage[justification=centering]{caption}
+
+\usepackage{graphicx}
+
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{mleftright}
+\mleftright{}
+
+\usepackage{tikz}
+
+\DeclareFontFamily{U}{matha}{\hyphenchar\font45}
+\DeclareFontShape{U}{matha}{m}{n}{
+      <5> <6> <7> <8> <9> <10> gen * matha
+      <10.95> matha10 <12> <14.4> <17.28> <20.74> <24.88> matha12
+      }{}
+
+\newcommand{\Land}{\mathbin{
+  \raisebox{.1ex}{%
+    \rotatebox[origin=c]{-90}{\usefont{U}{matha}{m}{n}\symbol{\string"CE}}}}}
+\newcommand{\Lor}{\mathbin{
+  \raisebox{.1ex}{%
+    \rotatebox[origin=c]{90}{\usefont{U}{matha}{m}{n}\symbol{\string"CE}}}}}
+
+\renewcommand{\implies}{\Rightarrow}
+\newcommand{\Implies}{\Longrightarrow}
+\renewcommand{\iff}{\Leftrightarrow}
+\newcommand{\lxor}{\veebar}
+\newcommand{\Iff}{\Longleftrightarrow}
+\newcommand{\nmodels}{\not\models}
+\newcommand{\BigO}{\mathcal{O}}
+\newcommand{\abs}[1]{\left\lvert{#1}\right\rvert}
+
+\author{Stefano Trevisani}
+\date{\today}
+\title{Notes for Verification and Validation Techniques for Artificial Intelligence and Cybersecurity}
+
+\begin{document}
+\maketitle
+\clearpage
+\tableofcontents
+\clearpage
+
+\section{Introduction to Logic}
+Logic is a formal language to reason about the properties of some `objects'.
+A logic, as any formal language, must have:
+\begin{itemize}
+	\item \emph{Lexicon} (or \emph{vocabulary}): symbols to denote objects and operations.
+	\item \emph{Syntax}: rules to combine symbols into constructs (terms, formulae).
+	\item \emph{Semantic}: meaning assigned to the syntactic constructs.
+	\item \emph{Algorithms} (or \emph{operations}): transformations for reasoning about the semantic
+	      of a syntactic construct.
+\end{itemize}
+
+\noindent A \emph{tautology} (or \emph{valid formula}) is a formula which is true in every model.
+\begin{example}
+	Consider the following proposition:
+	\begin{quote}
+		All men are mortal. Socrates is a man. Therefore, Socrates is mortal.
+	\end{quote}
+	It is a specific case of the more generic tautology:
+	\[ \left(\forall x\colon A\left(x\right) \implies B\left(x\right)\right) \land A\left(y\right)
+		\implies B\left(y\right) \]
+\end{example}
+
+\noindent A \emph{contradiction} (or \emph{paradox}) is a formula which is false in every model.
+\begin{example}
+	Consider the following proposition:
+	\begin{quote}
+		There is a barber which shaves everyone who doesen't shave themselves.
+	\end{quote}
+	It is a specific case of the more generic paradox:
+	\[\exists x,\forall y\colon A\left(x,y\right) \iff \neg A\left(y,y\right)\]
+\end{example}
+
+\noindent The variables in a formula can be of different \emph{sort}, as they represent objects of
+different \emph{type}.
+\begin{example}
+	Consider the following proposition:
+	\begin{quote}
+		Every incoming order is eventually processed
+	\end{quote}
+	It can be encoded in the following formula:
+	\[\forall o \in O, \forall t \in T\colon arrives\left(o,t\right) \implies \exists t' \in T\colon
+		t' > t \land process\left(o, t'\right)\]
+\end{example}
+
+\subsection{Problems on logic}
+There are several problems which can be defined over a logic:
+
+\begin{itemize}
+	\item \emph{Evaluation} (or \emph{Model checking}, \textsc{eval}): given a formula
+	      \(\phi \) and an interpretation \(M\), decide whether \(M \models \phi \)
+	      (i.e.\ whether \(M\) is a model of \(\phi \)).
+	\item \emph{Satisfiability} (\textsc{sat}): given a formula \(\phi \), decide whether \(\exists
+	      M\colon M \models
+	      \phi \).
+	\item \emph{Validity} (\textsc{val}): given a formula \(\phi \), decide whether \(\forall M\colon M
+	      \models \phi \).
+	\item \emph{Equivalence} (\textsc{equiv}): given two formulae \(\phi, \psi \), decide whether
+	      \(\phi \equiv \psi \).
+	\item \emph{Consequence} (\textsc{cons}): given two formulae \(\phi, \psi \), decide
+	      whether \(\phi \Implies \psi \).
+\end{itemize}
+
+Different logics can have similar problems associated with them, but they often differ in
+\emph{expressive power} and \emph{succintness}: problems associated with more expressive logics
+belong to higher complexity classes, and can even be undecidable, while succint logics offer
+more compact representations of similar problems, (artificially) increasing the associated complexity.
+
+\subsection{Propositional logic}
+Propositional logic is the simplest kind of formal logic:
+\begin{itemize}
+	\item Its \emph{lexicon} consists of propositional symbols, tipically denoted with lowercase
+	      letters \(p, q, r, \dots \) and the boolean connectives \(\neg, \land, \lor, \implies, \iff \).
+	      The set of all propositional symbols (the \emph{alphabet}) is denoted with \(\Sigma \).
+	\item Its \emph{syntax} consists of formulae denoted with greek letters \(\phi, \psi, \dots \)
+	      such that:
+	      \[\phi := {p} \mid {\neg \psi} \mid {\psi \land \psi'} \mid {\psi \lor \psi'} \mid
+		      {\psi \implies \psi'} \mid {\psi \iff \psi'} \]
+	\item Its \emph{semantic} consists of an \emph{interpretation} function
+	      \(M\colon \Sigma \mapsto \left\{\bot, \top \right\} \), which \emph{holds} on (or
+	      \emph{models}, or
+	      \emph{entails}) a formula \(\phi \):
+	      \begin{align*}
+		       & M \models {p}                  &  & \Iff &  & M\left(p\right) = \top
+		      \\
+		       & M \models {\neg \phi}          &  & \Iff &  & M \nmodels {\phi}
+		      \\
+		       & M \models {\phi \land \psi}    &  & \Iff &  & {M \models \phi} \Land {M \models
+			      \psi}
+		      \\
+		       & M \models {\phi \lor \psi}     &  & \Iff &  & {M \models \phi} \Lor {M \models \psi}
+		      \\
+		       & M \models {\phi \implies \psi} &  & \Iff &  & {M \models \phi} \Implies {M \models
+			      \psi}
+		      \\
+		       & M \models {\phi \iff \psi}     &  & \Iff &  & {M \models \phi} \Iff {M \models \psi}
+	      \end{align*}
+
+	      \noindent Furthermore:
+	      \begin{align*}
+		       & \phi \textnormal{ is a \emph{tautology}}            &  & \Iff &  & \forall M\colon M
+		      \models \phi
+		      \\
+		       & \phi \textnormal{ is a \emph{contradiction}}        &  & \Iff &  & \forall M\colon M
+		      \nmodels \phi
+		      \\
+		       & \phi \textnormal{ is a \emph{consequence} of } \psi &  & \Iff &  & \forall
+		      M\colon M \models \psi \Implies M \models \phi
+		      \\
+		       & \phi \textnormal{ is \emph{equivalent} to } \psi    &  & \Iff &  &
+		      \forall
+		      M\colon M \models \phi \Iff M \models \psi
+	      \end{align*}
+\end{itemize}
+
+\begin{remark}
+	Given two formulae \(\phi \) and \(\psi \) and the proposition \(\phi \implies \psi \):
+	\begin{itemize}
+		\item \(\phi \implies \psi \) is the \emph{direct} proposition.
+		\item \(\psi \implies \phi \) is the \emph{converse} proposition.
+		\item \(\neg\phi \implies \neg\psi \) is the \emph{inverse} proposition.
+		\item \(\neg\psi \implies \neg\phi \) is the \emph{contrapositive} proposition.
+		\item If the direct is false, the inverse is true.
+		\item If the direct is true, the contrapositive is true.
+	\end{itemize}
+\end{remark}
+
+\noindent To solve the model checking problem for propositional logic, we can use
+Algorithm~\ref{alg:prop_model_check}, which is a textbook recursive divide-and-conquer algorithm
+taking \(\BigO\left(\abs{\phi}\right)\) time (assuming that evaluating \(M\left(p\right)\) takes constant
+time).
+\begin{algorithm}
+	\centering
+	\begin{algorithmic}
+		\Require{A NNF formula \(\phi \) and an interpretation \(M\)}
+		\Ensure{Whether \(M\) is a model for \(\phi \)}
+		\Function{modelCheck}{$\phi$, $M$}
+		\Switch{\(\phi \)}
+		\Case{\(p\)}
+		\If{\(M\left(p\right) = \top \)}
+		\State{\Return{\(\textbf{true}\)}}
+		\Else{}
+		\State{\Return{\(\textbf{false}\)}}
+		\EndIf{}
+		\EndCase{}
+
+		\Case{\(\neg \phi_1\)}
+		\State{\Return{\(\neg \Call{modelCheck}{\phi_1, M}\)}}
+		\EndCase{}
+
+		\Case{\(\phi_1 \land \phi_2\)}
+		\State{\Return{\(\Call{modelCheck}{\phi_1, M}\land \Call{modelCheck}{\phi_2, M}\)}}
+		\EndCase{}
+
+		\Case{\(\phi_1 \lor \phi_2\)}
+		\State{\Return{\(\Call{modelCheck}{\phi_1, M} \lor \Call{modelCheck}{\phi_2, M}\)}}
+		\EndCase{}
+		\EndSwitch{}
+		\EndFunction{}
+	\end{algorithmic}
+	\caption{An algorithm to evaluate a propositional formula}\label{alg:prop_model_check}
+\end{algorithm}
+
+\noindent It is well known that \textsc{eval} is a \textbf{P}-complete problem\footnote{
+	\(\textbf{P} = TIME\left(\BigO\left(N^k\right)\right)\) is the class of problems decidable by a
+	deterministic Turing machine in time at most polynomial to the input size \(N\).}, and that it
+is possible to convert any propositional formula to an equivalent NNF formula in polynomial time.
+
+On the other hand, to solve the \textsc{sat} problem for propositional logic, we can use
+Algorithm~\ref{alg:prop_sat}, which takes exponential time to execute.
+\begin{algorithm}
+	\centering
+	\begin{algorithmic}
+		\Require{A NNF formula \(\phi \)}
+		\Ensure{Whether \(\phi \) is satisfiable or not}
+		\Function{isSatisfiable}{$\phi$}
+		\State{\(M \gets {\left(\bot\right)}^{\abs{\phi}}\)}
+		\While{\(M \neq {\left(\top\right)}^{\abs{\phi}}\)}
+		\If{\(\Call{modelCheck}{\phi, M} = \textbf{true}\)}
+		\State{\Return{\(\textbf{true}\)}}
+		\EndIf{}
+		\State{\(M \gets \Call{nextCombination}{M}\)}
+		\EndWhile{}
+		\If{\(\Call{modelCheck}{\phi, M} = \textbf{true}\)}
+		\State{\Return{\(\textbf{true}\)}}
+		\EndIf{}
+		\State{\Return{\(\textbf{false}\)}}
+		\EndFunction{}
+	\end{algorithmic}
+	\caption{An algorithm to decide satisfiability of a propositional formula}\label{alg:prop_sat}
+\end{algorithm}
+
+\noindent It is well known that \textsc{sat} for propositional logic is an \textbf{NP}-complete
+problem\footnote{\(\textbf{NP} = NTIME\left(\BigO\left(N^k\right)\right)\) is the class of problems decidable
+	by a non-deterministic Turing machine in time at most polynomial to the input size \(N\).}.
+
+\subsubsection{Normal forms}
+All propositional formulae can be rewritten in one of the so-called \emph{normal forms}, which
+reduce the vocabulary and constrain the syntactic structure of formulae with the advantage of
+making them easier to work on.
+There are three main normal forms:
+\begin{itemize}
+	\item \emph{Negation Normal Form} (NNF): the only allowed connectors are \(\neg \), \(\land \) and
+	      \(\lor \). Since \(x \implies y \equiv \neg x \lor y\) and
+	      \(x \iff y \equiv x \implies y \land y \implies x\), we do not lose expressive power.
+	      There are no restrictions on the syntactic structure of a formula.
+	      If a formula \(\phi \) contains two-way implications, then \(\abs{NNF\left(\phi\right)} =
+	      \BigO\left(2^{\abs{\phi}}\right)\),
+	      otherwise it will always be \(\BigO\left(\abs{\phi}\right)\).
+	\item \emph{Conjunctive Normal Form} (CNF): the allowed connectors are the same of NNF, but
+	      all the conjuctions must be at the top level of a formula:
+	      \[\phi = \left(l_{1,1} \lor \dots \lor l_{1,n_1}\right) \land \dots \land \left(l_{m,1}
+		      \lor \dots \lor l_{m,n_m}\right)\]
+	      where \(l = p \mid \neg p\).
+	      It is always possible to translate any formula in an equivalent CNF formula using
+	      De Morgan's laws and distributive laws:
+	      \begin{itemize}
+		      \renewcommand\labelitemii{\(\circ \)}
+		      \item \(x \lor y \equiv \neg{\left(\neg x \land \neg y\right)}\)
+		      \item \(x \land y \equiv \neg{\left(\neg x \lor \neg y\right)}\)
+		      \item \(x \lor \left(y \land z\right) = \left(x \lor y\right) \land \left(x \lor
+		            z\right)\)
+		      \item \(x \land \left(y \lor z\right) = \left(x \land y\right) \lor \left(x \land
+		            z\right)\)
+	      \end{itemize}
+	      Unfortunately, \(\abs{CNF\left(\phi\right)} = \BigO\left(2^{\abs{\phi}}\right)\) in general,
+	      but it is possible to introduce new additional variables to keep the size linear: we lose
+	      \emph{equivalence} but we keep \emph{equisatisfiability} (\textsc{CNF-sat} is still
+	      \textbf{NP}-complete).
+	      This form is also known as \emph{Product of Sums} (POS) form.
+	\item \emph{Disjunctive Normal Form} (DNF): the allowed connectors are the same of NNF, but
+	      all the disjunctions must be at the top level of a formula:
+	      \[\phi = \left(l_{1,1} \land \dots \land l_{1,n_1}\right) \lor \dots \lor \left(l_{m,1}
+		      \land \dots \land l_{m,n_m}\right)\]
+	      where \(l = p \mid \neg p\).
+	      It is always possible to translate any formula in an equivalent DNF formula using
+	      De Morgan's laws and distributive laws.
+	      In general, \(\abs{DNF\left(\phi\right)} = \BigO\left(2^{\abs{\phi}}\right)\),
+	      and there is no known satisfiability-preserving polynomial space transformation
+	      (in fact, \textsc{DNF-sat} is in \textbf{P}).
+	      This form is also known as \emph{Sum of Products} (SOP) form.
+\end{itemize}
+
+\subsubsection{Tableaux method}
+To solve the satisfiability problem for propositional logic, we saw that we could use
+Algorithm~\ref{alg:prop_sat}, assuming the formula was in NNF\@.
+A better approach to the \textsc{sat} problem is the \emph{tableaux method}, which is a special
+case of the backtracking method.
+More generally, backtracking algorithms are devised to solve \emph{Constraint Satisfaction Problems}
+(CSPs), i.e.\ search problems involving a  set variables \(V = \left\{x_1, \dots, x_n \right\} \)
+each over some domain \(\mathcal{D} = \left\{D_1, \dots, D_n \right\} \) subject to a set of
+constraints \(C\).
+For propositional logic, \(D_1 = \cdots = D_n = \left\{\bot, \top \right\} \), and the constraints
+are determined by the logical connectors between the subformulae.
+If we a formula \(\phi \) left-to-right, we can see the search space as a binary tree where at each
+level \(k\) we split the tree in two branches if \(\phi_k = \phi_{k+1,l} \lor \phi_{k+1,r} \) (we
+assume the left side to be true in the left branch, and the right side to be true in the right branch)
+or we split the formula if \(\phi_k = \phi_{k+1,l} \land \phi_{k+1,r} \)
+(as both sides must be true).
+Every leaf of the tree will then represent an interpretation, which becomes a model if the
+formula is satisfied.
+While the tree can contain up to \(2^n\) leaves, this does not always happen, as partial assignments
+might cause an early invalidation of the formula.
+The asymptotical complexity is still exponential, of course, but backtracking and tableaux methods
+can exploit many kinds of heuristics which often drastically reduce the search time.
+
+\subsubsection{Transition systems}
+Consider a \(k\)-bit finite state machine \(\mathcal{M}\), which can be in one of \(n = 2^k\)
+possible states \(S_i = \left( \left\lceil{\frac{i}{2^{k-1}}}\right\rceil \bmod 2, \dots,
+\left\lceil{\frac{i}{2^{0}}}\right\rceil \bmod 2\right)\).
+We can describe the \emph{reachability} problem \textsc{reach} as follows:
+\begin{itemize}
+	\item A formula \(\phi_{init}\left(X\right)\) which describes whether a state can be the initial
+	      state of the system.
+	\item A formula \(\phi_{goal}\left(X\right)\) which describes whether a state can be the final
+	      target of the system.
+	\item A formula \(\phi_{tran}\left(X, Y\right)\) which describes if it is possible for the system
+	      to transition from the first state to the second state.
+	\item A formula \(\phi_{same}\left(X, Y\right) = \bigwedge_{i=0}^{k}\left(X_i \iff Y_i\right)\),
+	      which describes whether two states are the same.
+	      It is not needed if \(\phi_{trans}\left(X,X\right)\) is always true.
+\end{itemize}
+Then, the formula which describes the reachability problem from an initial state \(X_1\) to a
+final state \(X_n\) passing by states \(X_2, \dots, X_{n-1}\) is simply:
+\[
+	\phi(X_1, \dots, X_n) = \phi_{init}\left(X_1\right) \wedge \phi_{goal}\left(X_n\right) \wedge
+	\bigwedge_{i=1}^{n}{\phi_{tran}\left(X_i, X_{i+1}\right) \lor \phi_{stay}(X_i, X_{i+1})}
+\]
+Note that, in \(\phi \), we didn't just fix the initial and final states, but also all the
+intermediate states: if there is an alternative path to reach the final state, it will not be
+taken into account from our formula.
+Furthermore, if \(\mathcal{M}\) cannot get from a state \(A\) to a state \(B\) in less than
+\(2^k\) steps, then there is no way to get from \(A\) to \(B\).
+
+\begin{example}
+	Suppose we have a 4-bit finite state machine \(\mathcal{M}\), then we have \(2^4 = 16\) different
+	possible states.
+	We define \(\phi_{init}(X)\) as:
+	\[\phi_{init}\left(X\right) = \neg X_2 \land \neg X_3 \land \neg X_4 \]
+	The only states which satisfy \(\phi_{init}\) are \(S_0 = \left(0, 0, 0, 0\right)\) and
+	\(S_1 = \left(1, 0, 0, 0\right)\).
+	Then we define \(\phi_{goal}\) as:
+	\[\phi_{goal}\left(X\right) = X_1 \land X_2 \land X_3 \land X_4\]
+	Which is satisfied only by \(S_{15} = \left(1, 1, 1, 1\right)\)\footnote{Since
+		\(\left\{\bot, \top\right\} \) is isomorphic to \(\left\{0, 1\right\} \), we use the two sets
+		interchangeably.}.
+
+	Suppose that our machine is a counter, then the transition formula will be:
+	%\begin{noindent}
+	\begin{align*}
+		& \phi_{tran}\left(X,Y\right) =                                                      \\
+		& \left(\neg X_1 \lor \neg X_2 \lor \neg X_3 \lor \neg X_4 \lor \neg Y_1\right) \land
+		\left(X_1 \lor \neg X_2 \lor \neg X_3 \lor \neg X_4 \lor Y_1\right) & \land						\\
+		%
+		& \left(\neg X_1 \lor Y_1 \lor \neg Y_2\right) \land 
+		\left(X_1 \lor \neg Y_1 \lor \neg Y_2\right) \land
+		\left(\neg X_1 \lor X_2 \lor Y_1\right) \land
+		\left(X_1 \lor X_2 \lor \neg Y_1\right)                             & \land						\\
+		%
+		& \left(\neg X_2 \lor Y_2 \lor \neg Y_3\right) \land
+		\left(X_2 \lor \neg Y_2 \lor \neg Y_3\right) \land
+		\left(\neg X_2 \lor Y_2 \lor \neg Y_4\right) \land
+		\left(X_2 \lor \neg Y_2 \lor \neg Y_4\right)                        & \land						\\
+		% 
+		& \left(\neg X_3 \lor Y_3 \lor \neg Y_4\right) \land
+		\left(X_3 \lor \neg Y_3 \lor \neg Y_4\right) \land
+		\left(X_3 \lor \neg X_4 \lor Y_3\right)                             & \land						\\
+		& \left(X_2 \lor \neg X_3 \lor \neg X_4 \lor Y_2\right) \land
+		\left(X_4 \lor Y_4\right)
+	\end{align*}
+	%\end{noindent}
+
+	\noindent This formula is satisfied only when applied to \(S_{i}\) and \(S_{i+1 \bmod 16}\), as
+	it states that the 4-bit number \(Y\) is the successor (modulo 16) of the 4-bit numer \(X\).
+	Now, let's check some cases when trying to satisfy \(\phi\left(X_1, \dots, X_n\right)\):
+	\begin{itemize}
+		\item If we choose \(X_i = S_i\), then \(\phi \) is satisfied, as \(S_0\) is
+		      a valid initial state (\(\phi_{init}\) is satisfied), \(S_n\) is a valid final state
+		      (\(\phi_{goal}\) is satisfied), and it is possible to transition from \(S_i\) to
+		      \(S_{i+1}\), (all occurences of \(\phi_{tran}\) are satisfied).
+		\item If \(X_{15} \neq S_{15}\), \(\phi_{goal}\) won't be satisfied,
+		      as \(S_{15}\) is the only valid final state.
+		\item Similarly, \(\phi_{init}\) will never be satisfied if \(X_1\) is neither \(S_1\)
+		      nor \(S_8\).
+		\item Again, some \(\phi_{tran}\) won't be satisfied if, when \(X_{i} = S_{j}\),
+		      \(X_{i+1} \neq S_{j+1}\).
+		      However, if \(X_{i+1} = X_{i}\), then \(\phi_{stay}\) is still satisfied.
+		\item Assume that \(X_1 = S_8\) and \(X_{15} = S_{15}\), it is possible to transition from 
+					\(S_8\) to \(S_{15}\) in \(7 < 15\) steps.
+		      Then, we set \(X_2 = S_9, \dots, X_7 = S_{14}\) and \(X_8 = \cdots = X_{15}\):
+		      thanks to \(\phi_{stay}\), the whole formula is satisfied.
+	\end{itemize}
+\end{example}
+
+\subsection{Quantified propositional logic}
+\end{document}
